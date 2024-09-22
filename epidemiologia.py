@@ -88,7 +88,7 @@ def calcular_matriz_transicion(data):
 # Lista de países de América Latina y Europa
 paises_latam_europa = [
     "Argentina", "Bolivia", "Brasil", "Chile", "Colombia", "Costa Rica", "Cuba", 
-    "Ecuador", "El Salvador", "Guatemala", "Honduras", "México", "Nicaragua", "Panamá", 
+    "Ecuador", "El Salvador", "Guatemala", "Honduras", "Mexico", "Nicaragua", "Panamá", 
     "Paraguay", "Perú", "Uruguay", "Venezuela", "España", "Francia", "Italia", 
     "Alemania", "Reino Unido", "Portugal"
 ]
@@ -103,7 +103,7 @@ perdida_olfato_gusto = st.checkbox("¿Ha experimentado pérdida repentina del ol
 fatiga_extrema = st.checkbox("¿Ha tenido fatiga extrema de aparición repentina?")
 escalofrios_intensos = st.checkbox("¿Ha sufrido escalofríos intensos acompañados de fiebre alta?")
 tos_perruna = st.checkbox("¿Ha presentado tos seca y ronquera severa?")
-apnea_bebes = st.checkbox("¿Su bebé ha tenido episodios de apnea o problemas respiratorios graves?")
+apnea_bebes = st.checkbox("¿Ha tenido episodios de apnea o problemas respiratorios graves?")
 neumonia_bronquiolitis = st.checkbox("¿Le han diagnosticado neumonía o bronquiolitis recientemente?")
 
 # Sección: Preguntas adicionales (sobre condiciones y factores de riesgo)
@@ -115,10 +115,14 @@ contaminacion_aire = st.checkbox("¿Vive en una zona con altos niveles de contam
 
 # Código Postal y País
 st.header("Ubicación para Llenado del Cuestionario")
-codigo_postal = st.text_input("Introduce el código postal de la ubicación donde  llenas este cuestionario")
+codigo_postal = st.text_input("Introduce el código postal de la ubicación donde llenas este cuestionario")
 
-# País seleccionado
-pais = st.selectbox("Selecciona el país desde el cual  llenas este cuestionario", paises_latam_europa)
+# País seleccionado con 'Mexico' como opción predeterminada
+pais = st.selectbox(
+    "Selecciona el país desde el cual llenas este cuestionario", 
+    sorted(paises_latam_europa),  # Ordena los países alfabéticamente
+    index=sorted(paises_latam_europa).index("Mexico")  # Asegura que 'Mexico' sea la opción predeterminada
+)
 
 # Usar el estado de sesión para guardar las coordenadas entre clics
 if "latitud" not in st.session_state:
@@ -132,7 +136,7 @@ if st.button("Obtener ubicación por Código Postal"):
     if latitud and longitud:
         st.session_state["latitud"] = latitud
         st.session_state["longitud"] = longitud
-        st.success(f"Ubicación obtenida: Latitud {latitud}, Longitud {longitud}")
+        st.success(f"Ubicación obtenida: Código Postal: {codigo_postal}, País: {pais}, Latitud: {latitud}, Longitud: {longitud}")
     else:
         st.error("No se pudo obtener la ubicación a partir del código postal y país. Verifica los datos ingresados.")
 
