@@ -38,8 +38,8 @@ def guardar_en_archivo(resultados, latitud, longitud):
         writer = csv.writer(file)
         writer.writerow([*resultados.values(), latitud, longitud])
 
-# Algoritmo de clustering con un radio ajustable utilizando DBSCAN
-def clustering_ajustado(data, radio_km=3):
+# Algoritmo de clustering con un radio fijo de 3 kilómetros utilizando DBSCAN
+def clustering_ajustado(data):
     coords = data[['latitud', 'longitud']].to_numpy()
 
     if np.isnan(coords).any():
@@ -47,7 +47,7 @@ def clustering_ajustado(data, radio_km=3):
         return data
 
     kms_per_radian = 6371.0088  # radio de la Tierra en km
-    epsilon = radio_km / kms_per_radian  # radio ajustable en radianes
+    epsilon = 3 / kms_per_radian  # Fijar el radio a 3 km, convertido a radianes
 
     db = DBSCAN(eps=epsilon, min_samples=2, algorithm='ball_tree', metric='haversine').fit(np.radians(coords))
     data['cluster'] = db.labels_
@@ -124,6 +124,10 @@ pais = st.selectbox(
     index=sorted(paises_latam_europa).index("Mexico")  # Asegura que 'Mexico' sea la opción predeterminada
 )
 
+# Usar el estado de sesión para gestionar si ya se hizo clic en el botón anteriormente
+if "obtener_coordenadas_click" not in st.session_state:
+    st.session_state["obtener_coordenadas_click"] = False
+
 # Usar el estado de sesión para guardar las coordenadas entre clics
 if "latitud" not in st.session_state:
     st.session_state["latitud"] = None
@@ -136,9 +140,14 @@ if st.button("Obtener ubicación por Código Postal"):
     if latitud and longitud:
         st.session_state["latitud"] = latitud
         st.session_state["longitud"] = longitud
+        st.session_state["obtener_coordenadas_click"] = True
         st.success(f"Ubicación obtenida: Código Postal: {codigo_postal}, País: {pais}, Latitud: {latitud}, Longitud: {longitud}")
     else:
         st.error("No se pudo obtener la ubicación a partir del código postal y país. Verifica los datos ingresados.")
+
+# Condicional para evitar que se suba en la primera ejecución
+if st.session_state["obtener_coordenadas_click"]:
+    st.write("Coordenadas obtenidas correctamente.")
 
 # Botón para procesar y guardar los datos
 if st.button("Procesar y Guardar"):
@@ -171,8 +180,8 @@ if st.button("Procesar y Guardar"):
 
             st.write(f"Total de registros cargados: {len(data)}")
 
-            # Realizar clustering con un radio ajustado (ejemplo: 3 km)
-            data_clustering = clustering_ajustado(data, radio_km=10)
+            # Realizar clustering con un radio fijo de 3 km
+            data_clustering = clustering_ajustado(data)
 
             clústeres_validos = data_clustering[data_clustering['cluster'] != -1]['cluster'].nunique()
             st.write(f"Se han detectado {clústeres_validos} clusters.")
