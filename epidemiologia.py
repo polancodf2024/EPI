@@ -32,11 +32,11 @@ def obtener_ubicacion_aproximada(cluster_data):
     except Exception as e:
         return str(e)
 
-# Función para guardar respuestas y ubicación en un archivo CSV
-def guardar_en_archivo(respuestas, latitud, longitud):
-    with open('respuestas.csv', mode='a', newline='') as file:
+# Función para guardar resultados y ubicación en un archivo CSV
+def guardar_en_archivo(resultados, latitud, longitud):
+    with open('resultados.csv', mode='a', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow([*respuestas.values(), latitud, longitud])
+        writer.writerow([*resultados.values(), latitud, longitud])
 
 # Algoritmo de clustering con un radio ajustable utilizando DBSCAN
 def clustering_ajustado(data, radio_km=3):
@@ -94,10 +94,10 @@ paises_latam_europa = [
 ]
 
 # Interfaz con Streamlit
-st.title("Evaluación de Riesgo Epidémico por Enfermedades Respiratorias")
+st.title("Evaluación de Riesgo Pandémico")
 
 # Sección: Preguntas sobre síntomas graves
-st.header("Evaluación de Síntomas Relacionados con Enfermedades Respiratorias")
+st.header("Síntomas")
 dificultad_respiratoria_grave = st.checkbox("¿Ha tenido dificultad respiratoria grave?")
 perdida_olfato_gusto = st.checkbox("¿Ha experimentado pérdida repentina del olfato o del gusto?")
 fatiga_extrema = st.checkbox("¿Ha tenido fatiga extrema de aparición repentina?")
@@ -107,14 +107,14 @@ apnea_bebes = st.checkbox("¿Su bebé ha tenido episodios de apnea o problemas r
 neumonia_bronquiolitis = st.checkbox("¿Le han diagnosticado neumonía o bronquiolitis recientemente?")
 
 # Sección: Preguntas adicionales (sobre condiciones y factores de riesgo)
-st.header("Evaluación de Condiciones y Factores de Riesgo")
+st.header("Factores Sociodemográficos")
 movilidad_poblacional = st.checkbox("¿Ha viajado o estado en contacto con muchas personas últimamente?")
 hacinamiento = st.checkbox("¿Vive en un lugar con alta densidad de personas?")
 acceso_servicios = st.checkbox("¿Tiene dificultades para acceder a servicios médicos de calidad?")
 contaminacion_aire = st.checkbox("¿Vive en una zona con altos niveles de contaminación del aire?")
 
 # Código Postal y País
-st.header("Código Postal desde donde llena este cuestionario")
+st.header("Ubicación para Llenado del Cuestionario")
 codigo_postal = st.text_input("Introduce el código postal de la ubicación donde  llenas este cuestionario")
 
 # País seleccionado
@@ -139,7 +139,7 @@ if st.button("Obtener ubicación por Código Postal"):
 # Botón para procesar y guardar los datos
 if st.button("Procesar y Guardar"):
     if st.session_state["latitud"] and st.session_state["longitud"]:
-        respuestas = {
+        resultados = {
             'dificultad_respiratoria_grave': dificultad_respiratoria_grave,
             'perdida_olfato_gusto': perdida_olfato_gusto,
             'fatiga_extrema': fatiga_extrema,
@@ -154,12 +154,12 @@ if st.button("Procesar y Guardar"):
         }
 
         # Guardar los datos junto con la ubicación
-        guardar_en_archivo(respuestas, st.session_state["latitud"], st.session_state["longitud"])
+        guardar_en_archivo(resultados, st.session_state["latitud"], st.session_state["longitud"])
         st.success(f"Datos guardados con éxito. Ubicación: Latitud {st.session_state['latitud']}, Longitud {st.session_state['longitud']}")
 
         # Leer el archivo CSV para clustering
         try:
-            data = pd.read_csv('respuestas.csv', names=[
+            data = pd.read_csv('resultados.csv', names=[
                 'dificultad_respiratoria_grave', 'perdida_olfato_gusto', 'fatiga_extrema',
                 'escalofrios_intensos', 'tos_perruna', 'apnea_bebes', 'neumonia_bronquiolitis',
                 'movilidad_poblacional', 'hacinamiento', 'acceso_servicios', 'contaminacion_aire',
@@ -171,7 +171,7 @@ if st.button("Procesar y Guardar"):
             data_clustering = clustering_ajustado(data, radio_km=10)
 
             clústeres_validos = data_clustering[data_clustering['cluster'] != -1]['cluster'].nunique()
-            st.write(f"Se han detectado {clústeres_validos} clústeres.")
+            st.write(f"Se han detectado {clústeres_validos} clusters.")
 
             matrices_transicion = calcular_matriz_transicion(data_clustering)
 
@@ -181,7 +181,7 @@ if st.button("Procesar y Guardar"):
                 st.write(f"Ubicación representativa del clúster: {info['ubicacion']}")
 
         except FileNotFoundError:
-            st.error("No se encontró el archivo de respuestas. Asegúrate de que se haya guardado algún registro.")
+            st.error("No se encontró el archivo de resultados. Asegúrate de que se haya guardado algún registro.")
     else:
         st.error("No se pudo obtener la ubicación. Intenta nuevamente.")
 
