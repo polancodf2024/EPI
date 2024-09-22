@@ -94,7 +94,7 @@ paises_latam_europa = [
 ]
 
 # Interfaz con Streamlit
-st.title("Evaluación de Riesgo Pandémico")
+st.title("Riesgo Pandémico")
 
 # Sección: Preguntas sobre síntomas graves
 st.header("Síntomas")
@@ -107,7 +107,7 @@ apnea_bebes = st.checkbox("¿Su bebé ha tenido episodios de apnea o problemas r
 neumonia_bronquiolitis = st.checkbox("¿Le han diagnosticado neumonía o bronquiolitis recientemente?")
 
 # Sección: Preguntas adicionales (sobre condiciones y factores de riesgo)
-st.header("Factores Sociodemográficos")
+st.header("Factores")
 movilidad_poblacional = st.checkbox("¿Ha viajado o estado en contacto con muchas personas últimamente?")
 hacinamiento = st.checkbox("¿Vive en un lugar con alta densidad de personas?")
 acceso_servicios = st.checkbox("¿Tiene dificultades para acceder a servicios médicos de calidad?")
