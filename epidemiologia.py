@@ -6,10 +6,19 @@ import pandas as pd
 import streamlit as st
 from collections import Counter
 from opencage.geocoder import OpenCageGeocode
+from datetime import datetime
 
 # Clave de API de OpenCage
-API_KEY = '83d69dc8ddf54be29e0dbe921396a26c'  # Coloca tu propia clave de OpenCage
+API_KEY = '83d69dc8ddf54be29e0dbe921396a26c'
 geocoder = OpenCageGeocode(API_KEY)
+
+# Lista de países de América Latina y Europa
+paises_latam_europa = [
+    "Argentina", "Bolivia", "Brasil", "Chile", "Colombia", "Costa Rica", "Cuba", 
+    "Ecuador", "El Salvador", "Guatemala", "Honduras", "Mexico", "Nicaragua", "Panamá", 
+    "Paraguay", "Perú", "Uruguay", "Venezuela", "España", "Francia", "Italia", 
+    "Alemania", "Reino Unido", "Portugal"
+]
 
 # Función para obtener latitud y longitud basadas en el código postal y país
 def obtener_coordenadas_por_codigo_postal(codigo_postal, pais):
@@ -32,11 +41,12 @@ def obtener_ubicacion_aproximada(cluster_data):
     except Exception as e:
         return str(e)
 
-# Función para guardar resultados y ubicación en un archivo CSV
+# Función para guardar resultados y ubicación en un archivo CSV con fecha y hora
 def guardar_en_archivo(resultados, latitud, longitud):
     with open('resultados.csv', mode='a', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow([*resultados.values(), latitud, longitud])
+        fecha_hora_actual = datetime.now().strftime('%Y-%m-%d %H:%M')
+        writer.writerow([*resultados.values(), latitud, longitud, fecha_hora_actual])
 
 # Algoritmo de clustering con un radio fijo de 3 kilómetros utilizando DBSCAN
 def clustering_ajustado(data):
@@ -54,10 +64,10 @@ def clustering_ajustado(data):
 
     return data
 
-# Función para calcular la matriz de transición por clúster y mostrar número de elementos y ubicación
+# Función para calcular la matriz de transición por clúster y guardar en archivo y pantalla con el formato solicitado
 def calcular_matriz_transicion(data):
     clústeres = data['cluster'].unique()
-    resultados = {}
+    resultados = []
 
     for clúster in clústeres:
         if clúster == -1:
@@ -79,19 +89,14 @@ def calcular_matriz_transicion(data):
         total = sum(transiciones.values())
         if total > 0:
             matriz = {nivel: count / total for nivel, count in transiciones.items()}
-            resultados[clúster] = {"matriz": matriz, "elementos": numero_elementos, "ubicacion": ubicacion_aproximada}
+            resultado = f'Ubicación representativa del cúmulo: {ubicacion_aproximada}, "Baja":{matriz["Baja"]}, "Moderada":{matriz["Moderada"]}, "Alta":{matriz["Alta"]}, cúmulo {clúster} con {numero_elementos} elementos.'
+            resultados.append(resultado)
         else:
-            resultados[clúster] = {"matriz": transiciones, "elementos": numero_elementos, "ubicacion": ubicacion_aproximada}
+            matriz = transiciones
+            resultado = f'Ubicación representativa del cúmulo: {ubicacion_aproximada}, "Baja":{matriz["Baja"]}, "Moderada":{matriz["Moderada"]}, "Alta":{matriz["Alta"]}, cúmulo {clúster} con {numero_elementos} elementos.'
+            resultados.append(resultado)
 
     return resultados
-
-# Lista de países de América Latina y Europa
-paises_latam_europa = [
-    "Argentina", "Bolivia", "Brasil", "Chile", "Colombia", "Costa Rica", "Cuba", 
-    "Ecuador", "El Salvador", "Guatemala", "Honduras", "Mexico", "Nicaragua", "Panamá", 
-    "Paraguay", "Perú", "Uruguay", "Venezuela", "España", "Francia", "Italia", 
-    "Alemania", "Reino Unido", "Portugal"
-]
 
 # Interfaz con Streamlit
 st.title("Mapa de Riesgo Pandémico")
@@ -115,11 +120,11 @@ contaminacion_aire = st.checkbox("¿Vive en una zona con altos niveles de contam
 
 # Código Postal y País
 st.header("Ubicación")
-codigo_postal = st.text_input("Introduce el código postal de la ubicación desde donde llenas este cuestionario")
+codigo_postal = st.text_input("Introduce el código postal de la ubicación desde donde respondes este cuestionario")
 
 # País seleccionado con 'Mexico' como opción predeterminada
 pais = st.selectbox(
-    "Selecciona el país desde el cual llenas este cuestionario", 
+    "Selecciona el país desde el cual respondes este cuestionario", 
     sorted(paises_latam_europa),  # Ordena los países alfabéticamente
     index=sorted(paises_latam_europa).index("Mexico")  # Asegura que 'Mexico' sea la opción predeterminada
 )
@@ -166,7 +171,7 @@ if st.button("Procesar y Guardar"):
             'contaminacion_aire': contaminacion_aire
         }
 
-        # Guardar los datos junto con la ubicación
+        # Guardar los datos junto con la ubicación y fecha/hora
         guardar_en_archivo(resultados, st.session_state["latitud"], st.session_state["longitud"])
         st.success(f"Datos guardados con éxito. Ubicación: Latitud {st.session_state['latitud']}, Longitud {st.session_state['longitud']}")
 
@@ -176,7 +181,7 @@ if st.button("Procesar y Guardar"):
                 'dificultad_respiratoria_grave', 'perdida_olfato_gusto', 'fatiga_extrema',
                 'escalofrios_intensos', 'tos_perruna', 'apnea_bebes', 'neumonia_bronquiolitis',
                 'movilidad_poblacional', 'hacinamiento', 'acceso_servicios', 'contaminacion_aire',
-                'latitud', 'longitud'])
+                'latitud', 'longitud', 'fecha_hora'])
 
             st.write(f"Total de registros cargados: {len(data)}")
 
@@ -184,14 +189,16 @@ if st.button("Procesar y Guardar"):
             data_clustering = clustering_ajustado(data)
 
             clústeres_validos = data_clustering[data_clustering['cluster'] != -1]['cluster'].nunique()
-            st.write(f"Se han detectado {clústeres_validos} clusters.")
+            st.write(f"Se han detectado {clústeres_validos} cúmulos.")
 
             matrices_transicion = calcular_matriz_transicion(data_clustering)
 
-            for clúster, info in matrices_transicion.items():
-                st.write(f"Matriz de transición para el clúster {clúster} con {info['elementos']} elementos:")
-                st.write(info['matriz'])
-                st.write(f"Ubicación representativa del clúster: {info['ubicacion']}")
+            # Guardar los resultados en un archivo
+            with open('cluster_resultados.csv', 'a', newline='') as file:
+                writer = csv.writer(file)
+                for resultado in matrices_transicion:
+                    st.write(resultado)
+                    writer.writerow([resultado])
 
         except FileNotFoundError:
             st.error("No se encontró el archivo de resultados. Asegúrate de que se haya guardado algún registro.")
