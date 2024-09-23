@@ -94,7 +94,7 @@ paises_latam_europa = [
 ]
 
 # Interfaz con Streamlit
-st.title("Riesgo Pandémico")
+st.title("Mapa de Riesgo Pandémico")
 
 # Sección: Preguntas sobre síntomas graves
 st.header("Síntomas")
@@ -114,8 +114,8 @@ acceso_servicios = st.checkbox("¿Tiene dificultades para acceder a servicios m�
 contaminacion_aire = st.checkbox("¿Vive en una zona con altos niveles de contaminación del aire?")
 
 # Código Postal y País
-st.header("Ubicación para Llenado del Cuestionario")
-codigo_postal = st.text_input("Introduce el código postal de la ubicación donde llenas este cuestionario")
+st.header("Ubicación")
+codigo_postal = st.text_input("Introduce el código postal de la ubicación desde donde llenas este cuestionario")
 
 # País seleccionado con 'Mexico' como opción predeterminada
 pais = st.selectbox(
@@ -144,7 +144,7 @@ if st.button("Obtener ubicación por Código Postal"):
         st.success(f"Ubicación obtenida: Código Postal: {codigo_postal}, País: {pais}, Latitud: {latitud}, Longitud: {longitud}")
     else:
         st.error("No se pudo obtener la ubicación a partir del código postal y país. Verifica los datos ingresados.")
-
+    
 # Condicional para evitar que se suba en la primera ejecución
 if st.session_state["obtener_coordenadas_click"]:
     st.write("Coordenadas obtenidas correctamente.")
