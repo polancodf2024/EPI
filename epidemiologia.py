@@ -64,7 +64,7 @@ def clustering_ajustado(data):
 
     return data
 
-# Función para calcular la matriz de transición por clúster y guardar en archivo y pantalla con el formato solicitado
+# Función para calcular la matriz de transición por clúster y mostrar el formato solicitado
 def calcular_matriz_transicion(data):
     clústeres = data['cluster'].unique()
     resultados = []
@@ -92,8 +92,7 @@ def calcular_matriz_transicion(data):
             resultado = f'Ubicación representativa del cúmulo: {ubicacion_aproximada}, "Baja":{matriz["Baja"]}, "Moderada":{matriz["Moderada"]}, "Alta":{matriz["Alta"]}, cúmulo {clúster} con {numero_elementos} elementos.'
             resultados.append(resultado)
         else:
-            matriz = transiciones
-            resultado = f'Ubicación representativa del cúmulo: {ubicacion_aproximada}, "Baja":{matriz["Baja"]}, "Moderada":{matriz["Moderada"]}, "Alta":{matriz["Alta"]}, cúmulo {clúster} con {numero_elementos} elementos.'
+            resultado = f'Ubicación representativa del cúmulo: {ubicacion_aproximada}, "Baja":{transiciones["Baja"]}, "Moderada":{transiciones["Moderada"]}, "Alta":{transiciones["Alta"]}, cúmulo {clúster} con {numero_elementos} elementos.'
             resultados.append(resultado)
 
     return resultados
@@ -121,42 +120,17 @@ contaminacion_aire = st.checkbox("¿Vive en una zona con altos niveles de contam
 # Código Postal y País
 st.header("Ubicación")
 codigo_postal = st.text_input("Introduce el código postal de la ubicación desde donde respondes este cuestionario")
+pais = st.selectbox("Selecciona el país desde el cual respondes este cuestionario", sorted(paises_latam_europa), index=sorted(paises_latam_europa).index("Mexico"))
 
-# País seleccionado con 'Mexico' como opción predeterminada
-pais = st.selectbox(
-    "Selecciona el país desde el cual respondes este cuestionario", 
-    sorted(paises_latam_europa),  # Ordena los países alfabéticamente
-    index=sorted(paises_latam_europa).index("Mexico")  # Asegura que 'Mexico' sea la opción predeterminada
-)
-
-# Usar el estado de sesión para gestionar si ya se hizo clic en el botón anteriormente
-if "obtener_coordenadas_click" not in st.session_state:
-    st.session_state["obtener_coordenadas_click"] = False
-
-# Usar el estado de sesión para guardar las coordenadas entre clics
-if "latitud" not in st.session_state:
-    st.session_state["latitud"] = None
-if "longitud" not in st.session_state:
-    st.session_state["longitud"] = None
-
-# Botón para obtener coordenadas por código postal y país
-if st.button("Obtener ubicación por Código Postal"):
+# Botón para procesar y guardar los datos (incluyendo la obtención automática de coordenadas)
+if st.button("Procesar y Guardar"):
+    # Obtener coordenadas por código postal y país
     latitud, longitud = obtener_coordenadas_por_codigo_postal(codigo_postal, pais)
+    
     if latitud and longitud:
         st.session_state["latitud"] = latitud
         st.session_state["longitud"] = longitud
-        st.session_state["obtener_coordenadas_click"] = True
-        st.success(f"Ubicación obtenida: Código Postal: {codigo_postal}, País: {pais}, Latitud: {latitud}, Longitud: {longitud}")
-    else:
-        st.error("No se pudo obtener la ubicación a partir del código postal y país. Verifica los datos ingresados.")
-    
-# Condicional para evitar que se suba en la primera ejecución
-if st.session_state["obtener_coordenadas_click"]:
-    st.write("Coordenadas obtenidas correctamente.")
-
-# Botón para procesar y guardar los datos
-if st.button("Procesar y Guardar"):
-    if st.session_state["latitud"] and st.session_state["longitud"]:
+        
         resultados = {
             'dificultad_respiratoria_grave': dificultad_respiratoria_grave,
             'perdida_olfato_gusto': perdida_olfato_gusto,
@@ -172,8 +146,8 @@ if st.button("Procesar y Guardar"):
         }
 
         # Guardar los datos junto con la ubicación y fecha/hora
-        guardar_en_archivo(resultados, st.session_state["latitud"], st.session_state["longitud"])
-        st.success(f"Datos guardados con éxito. Ubicación: Latitud {st.session_state['latitud']}, Longitud {st.session_state['longitud']}")
+        guardar_en_archivo(resultados, latitud, longitud)
+        st.success(f"Datos guardados con éxito. Ubicación: Latitud {latitud}, Longitud {longitud}")
 
         # Leer el archivo CSV para clustering
         try:
@@ -203,5 +177,5 @@ if st.button("Procesar y Guardar"):
         except FileNotFoundError:
             st.error("No se encontró el archivo de resultados. Asegúrate de que se haya guardado algún registro.")
     else:
-        st.error("No se pudo obtener la ubicación. Intenta nuevamente.")
+        st.error("No se pudo obtener la ubicación. Verifica el código postal y país.")
 
