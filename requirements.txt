@@ -1,6 +1,7 @@
 streamlit
-geopy
-opencage
 pandas
-scikit-learn
 numpy
+matplotlib
+geopy
+scikit-learn
+opencage
