@@ -4,6 +4,4 @@ geopy
 scikit-learn
 streamlit
 matplotlib
-smtplib
-ssl
 opencage
