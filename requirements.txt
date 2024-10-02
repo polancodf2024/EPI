@@ -2,7 +2,7 @@
 numpy
 pandas
 geopy
-sklearn
+scikit-learn
 streamlit
 opencage
 matplotlib
