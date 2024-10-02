@@ -1,7 +1,5 @@
-numpy
-pandas
-geopy
-scikit-learn
 streamlit
-matplotlib
-opencage
+pandas
+openpyxl
+smtplib
+ssl
