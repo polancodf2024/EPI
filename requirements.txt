@@ -1,5 +1,8 @@
 streamlit
 pandas
+numpy
+matplotlib
+scikit-learn
+geopy
+opencage
 openpyxl
-smtplib
-ssl
