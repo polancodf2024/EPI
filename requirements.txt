@@ -1,8 +1,8 @@
-streamlit
-pandas
+
 numpy
-matplotlib
-scikit-learn
+pandas
 geopy
+sklearn
+streamlit
 opencage
-openpyxl
+matplotlib

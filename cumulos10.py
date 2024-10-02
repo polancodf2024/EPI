@@ -163,6 +163,11 @@ if st.button("Procesar y Guardar"):
                 plt.ylabel('Número de Registros')
                 plt.legend()
                 plt.grid()
+
+                # Mostrar el gráfico en la pantalla
+                st.pyplot(plt)
+
+                # Guardar el gráfico como archivo
                 grafico_path = 'alerta_grafico.png'
                 plt.savefig(grafico_path)
                 plt.close()
